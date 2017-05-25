@@ -315,8 +315,6 @@ def ABOD(data):
 	# startTime = getCurrTime()
 	# data = loadCsvIntoTable_2(fSrc)
 	pointsList = attributesSelection(data)
-	# print "Points List"
-	# print pointsList
 	distTable = computeDistMatrix(pointsList)
 	# print distTable
 	DictABOF = {}

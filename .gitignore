@@ -1,2 +1,4 @@
 *.pyc
 *.log
+ABOD_scores.csv
+LOF_scores.csv
