@@ -84,38 +84,82 @@ def normalize_scores(scores):
         for j in range(len(scores[i])):
             scores[i][j] = max(0, erf((scores[i][j] - mn) / (sqrt(2)*st_div)))
 
+def write_scores_to_file(lof_scores, abod_scores, lof_scores_filename, abod_scores_filename, plot_instances):
+    num_scores = len(plot_instances[0])
 
-# Read the data
-file = "combined_data_short.csv"
-data = pd.read_csv(file, skipinitialspace=True, escapechar="\\", header=None)
+    # Write Normalized LOF and ABOD scores to a file
+    lof_file = open(lof_scores_filename, 'w')
+    abod_file = open(abod_scores_filename, 'w')
 
-# Get the x,y pairs of data for each plot
-plot_instances = get_plot_instances(data)
-print("Created Plot Instances")
+    for node_idx in range(num_scores):
+        lof_data_string = ""
+        abod_data_string = ""
+        for plot_num in range(len(plot_instances)):
+            if plot_num == (len(plot_instances) - 1):
+                lof_data_string += str(lof_scores[plot_num][node_idx]) + "\n"
+                abod_data_string += str(abod_scores[plot_num][node_idx]) + "\n"
+            else:
+                lof_data_string += str(lof_scores[plot_num][node_idx]) + ","
+                abod_data_string += str(abod_scores[plot_num][node_idx]) + ","
+        lof_file.write(lof_data_string)
+        abod_file.write(abod_data_string)
 
-lof_scores, abod_scores = get_scores(plot_instances)
+    lof_file.close()
+    abod_file.close()
 
-print abod_scores
+# Perform score combination to get a final outlier score for each node
+def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_scores_filename):
+    print "Reading scores data from " + lof_scores_filename, abod_scores_filename
+    # Weights for each plot from 1-6 respectively
+    weights = [1, 1, 1, 1/3 ,1/3 ,1/3]
 
-num_scores = len(plot_instances[0])
+    lof_scores_data = pd.read_csv(lof_scores_filename, skipinitialspace=True, escapechar="\\", header=None)
+    abod_scores_data = pd.read_csv(abod_scores_filename, skipinitialspace=True, escapechar="\\", header=None)
 
-# Write Normalized LOF and ABOD scores to a file
-lof_file = open('LOF_scores.csv', 'w')
-abod_file = open('ABOD_scores.csv', 'w')
+    scores = [lof_scores_data, abod_scores_data]
 
-for node_idx in range(num_scores):
-    lof_data_string = ""
-    abod_data_string = ""
-    for plot_num in range(len(plot_instances)):
-        if plot_num == (len(plot_instances) - 1):
-            lof_data_string += str(lof_scores[plot_num][node_idx]) + "\n"
-            abod_data_string += str(abod_scores[plot_num][node_idx]) + "\n"
-        else:
-            lof_data_string += str(lof_scores[plot_num][node_idx]) + ","
-            abod_data_string += str(abod_scores[plot_num][node_idx]) + ","
-    lof_file.write(lof_data_string)
-    abod_file.write(abod_data_string)
+    num_scores = len(lof_scores_data[0])
 
-lof_file.close()
-abod_file.close()
-print("Done!")
+    print("Combining scores data ...")
+    combined_scores = []
+    for i in range(num_scores):
+        numerator = 0
+        denominator = 0
+        for plot_num in range(6):
+            for score in scores:
+                numerator += (weights[plot_num] * score[plot_num][i])
+                denominator += weights[plot_num]
+
+        combined_scores.append(numerator/denominator)
+
+    print "Done combining scores data"
+
+    print "Writting combined scores data to " + abod_scores_filename 
+    combined_scores_file = open(combined_scores_filename, 'w')
+    for score in combined_scores:
+        combined_scores_file.write(str(score) + "\n")
+    combined_scores_file.close()
+    print "Finished writting combined scores to " + abod_scores_filename
+
+def main():
+    # Read the data
+    file = "combined_data_short.csv"
+    data = pd.read_csv(file, skipinitialspace=True, escapechar="\\", header=None)
+
+    # Get the x,y pairs of data for each plot
+    plot_instances = get_plot_instances(data)
+    print "Created Plot Instances"
+
+    lof_scores, abod_scores = get_scores(plot_instances)
+
+    lof_scores_filename = "LOF_scores.csv"
+    abod_scores_filename = "ABOD_scores.csv"
+    combined_scores_filename = "combined_scores.csv"
+
+    write_scores_to_file(lof_scores, abod_scores, lof_scores_filename, abod_scores_filename, plot_instances)
+
+    form_combined_scores(lof_scores_filename, abod_scores_filename, combined_scores_filename)
+
+if __name__ == '__main__':
+    main()
+    print "Done"
