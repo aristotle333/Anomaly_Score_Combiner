@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 
 from lof import LOF
 from abod import get_ABOD_scores
@@ -37,11 +38,17 @@ def get_plot_instances(data):
 
 # Returns the normalized LOF and ABOD scores for all plot instances
 def get_scores(plot_instances):
+    start_time = time.time()
     lof_scores = []
     abod_scores = []
 
+    lof_time = 0
+    abod_time = 0
+
     # Generate the LOF and ABOD scores for each point in each plot
+    plot_num = 1
     for instance in plot_instances:
+        lof_start_time = time.time()
         # Calculate LOF Scores
         lof = LOF(instance)
         lof_scores_in_this_plot = []
@@ -49,26 +56,39 @@ def get_scores(plot_instances):
             value = lof.local_outlier_factor(5, point)
             lof_scores_in_this_plot.append(value)
         lof_scores.append(lof_scores_in_this_plot)
+        lof_time += (time.time() - lof_start_time)
+        print "Elapsed time for LOF scores so far is:", lof_time, "seconds"
 
+        abod_start_time = time.time()
         # Calculate ABOD scores
         abod_scores_in_this_plot = get_ABOD_scores(instance)
         abod_scores.append(abod_scores_in_this_plot)
-        print("Finished calculating ABOD and LOF scores for a plot")
+        abod_time += (time.time() - abod_start_time)
+        print "Elapsed time for ABOD scores so far is:", abod_time, "seconds"
+        print "Finished calculating ABOD and LOF scores for a plot", plot_num
+        plot_num += 1
 
     print "Finished creating ABOD and LOF Scores"
 
+    norm_lof_scores_time = time.time()
     print "Normalizing LOF scores..."
     normalize_scores(lof_scores)
-    print "Finished Normalizing LOF scores"
+    lof_time += (time.time() - norm_lof_scores_time)
+    print "Finished Normalizing LOF scores in " + str(time.time()-norm_lof_scores_time) + " seconds"
 
+    norm_abod_scores_time = time.time()
     print "Performing Logarithmic Inversion on ABOD scores..."
     score_logarithmic_inversion(abod_scores)
     print "Finished Logarithmic Iversion for ABOD scores"
 
     print "Normalizing ABOD scores..."
     normalize_scores(abod_scores)
-    print "Finished Normalizing ABOD scores"
+    abod_time += (time.time() - norm_abod_scores_time)
+    print "Finished Normalizing ABOD scores in " + str(time.time()-norm_abod_scores_time) + " seconds"
 
+    print "Total time calculating and normalizing LOF scores was", lof_time, "seconds"
+    print "Total time calculating and normalizing ABOD scores was", abod_time, "seconds"
+    print "Time taken to calculte all ABOD and LOF scores with normalization was " + str(time.time() - start_time) + " seconds"
     return lof_scores, abod_scores
 
 def score_logarithmic_inversion(scores):
@@ -109,6 +129,7 @@ def write_scores_to_file(lof_scores, abod_scores, lof_scores_filename, abod_scor
 
 # Perform score combination to get a final outlier score for each node
 def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_scores_filename):
+    start_time = time.time()
     print "Reading scores data from " + lof_scores_filename, abod_scores_filename
     # Weights for each plot from 1-6 respectively
     weights = [1, 1, 1, 1/3 ,1/3 ,1/3]
@@ -140,6 +161,7 @@ def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_sco
         combined_scores_file.write(str(score) + "\n")
     combined_scores_file.close()
     print "Finished writting combined scores to " + abod_scores_filename
+    print "Time to combine all scores and write them to a file was: " + str(time.time()-start_time) + " seconds"
 
 def main():
     # Read the data
@@ -161,5 +183,6 @@ def main():
     form_combined_scores(lof_scores_filename, abod_scores_filename, combined_scores_filename)
 
 if __name__ == '__main__':
+    start_time = time.time()
     main()
-    print "Done"
+    print "Done, total running time was:", (time.time()-start_time), "seconds"
