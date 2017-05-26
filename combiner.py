@@ -6,6 +6,8 @@ from abod import get_ABOD_scores
 from numpy import mean, std, sqrt
 from math import erf, log
 
+from multiprocessing import Process, Queue
+
 def get_plot_instances(data):
     plot_instances = []
     temp_instance = []
@@ -36,39 +38,98 @@ def get_plot_instances(data):
 
     return plot_instances
 
+#asdfasd
+def calculate_lof_scores(instance, plot_num, lof_queue):
+    print "Started calculating LOF scores for plot", plot_num
+    start_time = time.time()
+    lof = LOF(instance)
+    lof_scores_in_this_plot = []
+    for point in instance:
+        value = lof.local_outlier_factor(5, point)
+        lof_scores_in_this_plot.append(value)
+    dictionary = {plot_num: lof_scores_in_this_plot} 
+    lof_queue.put(dictionary)
+    print "Finished calculating LOF scores for plot", plot_num, "elapsed time:", time.time() - start_time
+
+def calculate_abod_scores(instance, plot_num, abod_queue):
+    print "Started calculating ABOD scores for plot", plot_num
+    start_time = time.time()
+    abod_scores_in_this_plot = get_ABOD_scores(instance)
+    dictionary = {plot_num: abod_scores_in_this_plot} 
+    abod_queue.put(dictionary)
+    print "Finished calculating ABOD scores for plot", plot_num, "elapsed time:", time.time() - start_time
+
 # Returns the normalized LOF and ABOD scores for all plot instances
 def get_scores(plot_instances):
     start_time = time.time()
-    lof_scores = []
-    abod_scores = []
+    num_plots = len(plot_instances)
+    lof_scores = [None] * num_plots
+    abod_scores = [None] * num_plots
 
     lof_time = 0
     abod_time = 0
 
-    # Generate the LOF and ABOD scores for each point in each plot
-    plot_num = 1
-    for instance in plot_instances:
-        lof_start_time = time.time()
-        # Calculate LOF Scores
-        lof = LOF(instance)
-        lof_scores_in_this_plot = []
-        for point in instance:
-            value = lof.local_outlier_factor(5, point)
-            lof_scores_in_this_plot.append(value)
-        lof_scores.append(lof_scores_in_this_plot)
-        lof_time += (time.time() - lof_start_time)
-        print "Elapsed time for LOF scores so far is:", lof_time, "seconds"
+    # Variables used for multiprocessing purposes
+    plot_num = 0
+    lof_queue = Queue()
+    abod_queue = Queue()
+    lof_processes = []
+    abod_processes = []
 
-        abod_start_time = time.time()
-        # Calculate ABOD scores
-        abod_scores_in_this_plot = get_ABOD_scores(instance)
-        abod_scores.append(abod_scores_in_this_plot)
-        abod_time += (time.time() - abod_start_time)
-        print "Elapsed time for ABOD scores so far is:", abod_time, "seconds"
-        print "Finished calculating ABOD and LOF scores for a plot", plot_num
+    get_scores_time = time.time()
+
+    # Generate the LOF and ABOD scores for each point in each plot using multiproccessing
+    for instance in plot_instances:
+        lof_process = Process(target=calculate_lof_scores,args=(instance, plot_num, lof_queue))
+        lof_process.start()
+        lof_processes.append(lof_process)
+
+        abod_process = Process(target=calculate_abod_scores,args=(instance, plot_num, abod_queue))
+        abod_process.start()
+        abod_processes.append(abod_process)
         plot_num += 1
 
-    print "Finished creating ABOD and LOF Scores"
+        # lof_start_time = time.time()
+        # # Calculate LOF Scores
+        # lof = LOF(instance)
+        # lof_scores_in_this_plot = []
+        # for point in instance:
+        #     value = lof.local_outlier_factor(5, point)
+        #     lof_scores_in_this_plot.append(value)
+        # lof_scores.append(lof_scores_in_this_plot)
+        # lof_time += (time.time() - lof_start_time)
+        # print "Elapsed time for LOF scores so far is:", lof_time, "seconds"
+
+        # abod_start_time = time.time()
+        # # Calculate ABOD scores
+        # abod_scores_in_this_plot = get_ABOD_scores(instance)
+        # abod_scores.append(abod_scores_in_this_plot)
+        # abod_time += (time.time() - abod_start_time)
+        # print "Elapsed time for ABOD scores so far is:", abod_time, "seconds"
+        # print "Finished calculating ABOD and LOF scores for a plot", plot_num
+
+    lof_results = {}
+    abod_results = {}
+
+    for i in range(num_plots):
+        lof_results.update(lof_queue.get())
+
+    for i in range(num_plots):
+        abod_results.update(abod_queue.get())
+
+    for proc in lof_processes:
+        proc.join()
+
+    for proc in abod_processes:
+        proc.join()
+
+    for key, val in lof_results.iteritems():
+        lof_scores[key] = val
+
+    for key, val in abod_results.iteritems():
+        abod_scores[key] = val
+
+    print "Finished creating ABOD and LOF Scores, elapsed time is:", time.time() - get_scores_time
 
     norm_lof_scores_time = time.time()
     print "Normalizing LOF scores..."
