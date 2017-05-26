@@ -308,11 +308,11 @@ def ABOF(pointsList, A, index, distTable):
 	return variance
 
 # SIGNATURE MODIFIED FROM ORIGINAL
-def ABOD(data):
+def ABOD(data, plot_num):
 	"""
 	ABOD algorithm implementation
 	"""
-	# startTime = getCurrTime()
+	startTime = time.time()
 	# data = loadCsvIntoTable_2(fSrc)
 	pointsList = attributesSelection(data)
 	distTable = computeDistMatrix(pointsList)
@@ -320,10 +320,9 @@ def ABOD(data):
 	DictABOF = {}
 	i = 0
 	for A in pointsList:
-		start_time = time.clock()
 		ABOF_A = ABOF(pointsList, A, i, distTable)
-#		if (i + 1) % 100 == 0:
-#			print '100 points, START %s\tEND %s' % (startTime, getCurrTime()) 
+		if (i + 1) % 100 == 0:
+			print "Calculated",i,'ABOD scores for plot', plot_num, "elapsed time is:", time.time() - startTime
 		DictABOF.setdefault(i + 1, ABOF_A) # in reality, points ID start with 1
 		i += 1
 
@@ -603,11 +602,11 @@ def LB_ABOD(fSrc, fResultPath, kNN, topK):
 	info = 'LB-ABOD\tSTART %s\tEND %s\tRunTime %d' % (startTime, endTime, computeRunTime(startTime, endTime))
 	logPrint(logger, 'INFO', info)
 
-def get_ABOD_scores(instance):
+def get_ABOD_scores(instance, plot_num):
 	N = len(instance)
 	kNN = len(instance)
 	topK = len(instance)
-	scores = ABOD(instance)
+	scores = ABOD(instance, plot_num)
 	return scores
 
 def main():

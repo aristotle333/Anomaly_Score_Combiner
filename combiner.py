@@ -43,9 +43,13 @@ def calculate_lof_scores(instance, plot_num, lof_queue):
     start_time = time.time()
     lof = LOF(instance)
     lof_scores_in_this_plot = []
+    i = 0
     for point in instance:
+        if (i  + 1) % 100 == 0:
+            print "Calculated", i, "LOF scores for plot", plot_num, "elapsed time is:", time.time() - start_time
         value = lof.local_outlier_factor(5, point)
         lof_scores_in_this_plot.append(value)
+        i += 1
     dictionary = {plot_num: lof_scores_in_this_plot} 
     lof_queue.put(dictionary)
     print "Finished calculating LOF scores for plot", plot_num, "elapsed time:", time.time() - start_time
@@ -53,7 +57,7 @@ def calculate_lof_scores(instance, plot_num, lof_queue):
 def calculate_abod_scores(instance, plot_num, abod_queue):
     print "Started calculating ABOD scores for plot", plot_num
     start_time = time.time()
-    abod_scores_in_this_plot = get_ABOD_scores(instance)
+    abod_scores_in_this_plot = get_ABOD_scores(instance, plot_num)
     dictionary = {plot_num: abod_scores_in_this_plot} 
     abod_queue.put(dictionary)
     print "Finished calculating ABOD scores for plot", plot_num, "elapsed time:", time.time() - start_time
@@ -87,25 +91,6 @@ def get_scores(plot_instances):
         abod_process.start()
         abod_processes.append(abod_process)
         plot_num += 1
-
-        # lof_start_time = time.time()
-        # # Calculate LOF Scores
-        # lof = LOF(instance)
-        # lof_scores_in_this_plot = []
-        # for point in instance:
-        #     value = lof.local_outlier_factor(5, point)
-        #     lof_scores_in_this_plot.append(value)
-        # lof_scores.append(lof_scores_in_this_plot)
-        # lof_time += (time.time() - lof_start_time)
-        # print "Elapsed time for LOF scores so far is:", lof_time, "seconds"
-
-        # abod_start_time = time.time()
-        # # Calculate ABOD scores
-        # abod_scores_in_this_plot = get_ABOD_scores(instance)
-        # abod_scores.append(abod_scores_in_this_plot)
-        # abod_time += (time.time() - abod_start_time)
-        # print "Elapsed time for ABOD scores so far is:", abod_time, "seconds"
-        # print "Finished calculating ABOD and LOF scores for a plot", plot_num
 
     lof_results = {}
     abod_results = {}
@@ -225,7 +210,7 @@ def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_sco
 
 def main():
     # Read the data
-    file = "InputData/combined_data_short.csv"
+    file = "InputData/combined_data_400.csv"
     data = pd.read_csv(file, skipinitialspace=True, escapechar="\\", header=None)
 
     # Get the x,y pairs of data for each plot
