@@ -29,8 +29,8 @@ def get_plot_instances(data):
     plot_instances.append(temp_instance)
 
     # TODO: Change this to calculate the LOF scores for all combinations of eigenvectors,
-    # currently it only uses v1 vs. v2, v3 vs. v4 and v5 vs. v6
-    for i in range(3):
+    # currently it only uses v1 vs. v2, v3 vs. v4, v5 vs. v6, v7 vs v8, v9 vs. v10
+    for i in range(5):
         temp_instance = []
         for (x, y) in zip(data[i*2 + 4],data[i*2 + 5]):
             temp_instance.append([x, y])
@@ -38,7 +38,6 @@ def get_plot_instances(data):
 
     return plot_instances
 
-#asdfasd
 def calculate_lof_scores(instance, plot_num, lof_queue):
     print "Started calculating LOF scores for plot", plot_num
     start_time = time.time()
@@ -192,8 +191,8 @@ def write_scores_to_file(lof_scores, abod_scores, lof_scores_filename, abod_scor
 def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_scores_filename):
     start_time = time.time()
     print "Reading scores data from " + lof_scores_filename, abod_scores_filename
-    # Weights for each plot from 1-6 respectively
-    weights = [1, 1, 1, 1/3 ,1/3 ,1/3]
+    # Weights for each plot from 1-8 respectively
+    weights = [1, 1, 1, 1/3 ,1/3 ,1/3, 1/3, 1/3]
 
     lof_scores_data = pd.read_csv(lof_scores_filename, skipinitialspace=True, escapechar="\\", header=None)
     abod_scores_data = pd.read_csv(abod_scores_filename, skipinitialspace=True, escapechar="\\", header=None)
@@ -207,7 +206,7 @@ def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_sco
     for i in range(num_scores):
         numerator = 0
         denominator = 0
-        for plot_num in range(6):
+        for plot_num in range(8):
             for score in scores:
                 numerator += (weights[plot_num] * score[plot_num][i])
                 denominator += weights[plot_num]
@@ -226,7 +225,7 @@ def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_sco
 
 def main():
     # Read the data
-    file = "combined_data_short.csv"
+    file = "InputData/combined_data_short.csv"
     data = pd.read_csv(file, skipinitialspace=True, escapechar="\\", header=None)
 
     # Get the x,y pairs of data for each plot
