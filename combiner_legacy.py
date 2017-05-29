@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import sys
 
 from lof import LOF
 from abod import get_ABOD_scores
@@ -208,9 +209,10 @@ def form_combined_scores(lof_scores_filename, abod_scores_filename, combined_sco
     print "Finished writting combined scores to " + abod_scores_filename
     print "Time to combine all scores and write them to a file was: " + str(time.time()-start_time) + " seconds"
 
-def main():
+def main(filename):
     # Read the data
-    file = "InputData/combined_data_400.csv"
+    print "Filename is:", filename
+    file = filename
     data = pd.read_csv(file, skipinitialspace=True, escapechar="\\", header=None)
 
     # Get the x,y pairs of data for each plot
@@ -229,5 +231,5 @@ def main():
 
 if __name__ == '__main__':
     start_time = time.time()
-    main()
+    main(sys.argv[1])
     print "Done, total running time was:", (time.time()-start_time), "seconds"
