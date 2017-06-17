@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# logfile=output.log
+# exec > $logfile 2>&1
 echo "Started combiner script"
 
 # Change the inputFile path accordingly to the file you desire
-inputFile="InputData/combined_data_100.csv"
+inputFile="InputData/combined_data_800.csv"
 
 echo "Creating gfadd_input_files..."
 python gfadd_file_creator.py $inputFile
@@ -12,7 +14,7 @@ echo "Finished creating gfadd_input_files"
 echo "Calculating GFADD scores..."
 cd  GFADD
 time(
-for i in {0..7}
+for i in {0..8}
 do
     make demo DATADIRS="plot"$i".txt"
 done)

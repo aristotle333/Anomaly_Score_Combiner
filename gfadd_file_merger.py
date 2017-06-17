@@ -30,7 +30,7 @@ def write_scores_to_file(scores, filename):
 
 def main():
     gfadd_scores = []
-    for i in range(8):
+    for i in range(9):
         gfadd_scores.append(extract_data(i))
     
     filename = "GFADD_scores.csv"

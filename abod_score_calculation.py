@@ -29,11 +29,17 @@ def get_plot_instances(data):
         temp_instance.append([x, y])
     plot_instances.append(temp_instance)
 
+    temp_instance = []
+    # clustering_coefficient_6 vs. clustering_coeficient
+    for (x, y) in zip(data[6],data[7]):
+        temp_instance.append([x, y])
+    plot_instances.append(temp_instance)
+
     # TODO: Change this to calculate the LOF scores for all combinations of eigenvectors,
     # currently it only uses v1 vs. v2, v3 vs. v4, v5 vs. v6, v7 vs v8, v9 vs. v10
     for i in range(5):
         temp_instance = []
-        for (x, y) in zip(data[i*2 + 4],data[i*2 + 5]):
+        for (x, y) in zip(data[i*2 + 9],data[i*2 + 10]):
             temp_instance.append([x, y])
         plot_instances.append(temp_instance)
 
@@ -69,8 +75,6 @@ def get_scores(plot_instances):
     num_plots = len(plot_instances)
     abod_scores = [None] * num_plots
 
-    abod_time = 0
-
     # Variables used for multiprocessing purposes
     plot_num = 0
     abod_queue = Queue()
@@ -105,10 +109,8 @@ def get_scores(plot_instances):
 
     print "Normalizing ABOD scores..."
     normalize_scores(abod_scores)
-    abod_time += (time.time() - norm_abod_scores_time)
     print "Finished Normalizing ABOD scores in " + str(time.time()-norm_abod_scores_time) + " seconds"
 
-    print "Total time calculating and normalizing ABOD scores was", abod_time, "seconds"
     print "Time taken to calculte all ABOD scores with normalization was " + str(time.time() - start_time) + " seconds"
     return abod_scores
 
