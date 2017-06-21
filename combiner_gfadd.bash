@@ -3,7 +3,7 @@
 echo "Started combiner script"
 
 # Change the inputFile path accordingly to the file you desire
-inputFile="InputData/combined_data_full_set3.csv"
+inputFile="InputData/combined_data_full.csv"
 
 echo "Creating gfadd_input_files..."
 python gfadd_file_creator.py $inputFile
@@ -11,11 +11,14 @@ echo "Finished creating gfadd_input_files"
 
 echo "Calculating GFADD scores..."
 cd  GFADD
-time(
+GFADD_START_TIME=$SECONDS
 for i in {0..8}
 do
     make demo DATADIRS="plot"$i".txt"
-done)
+done
+GFADD_RUNTIME=$((SECONDS-GFADD_START_TIME))
+echo "Runtime of GFADD algorithm was: " $GFADD_RUNTIME "seconds"
+
 cd ..
 echo "Finished calculating GFADD scores"
 
