@@ -5,8 +5,18 @@ import sys
 from numpy import mean, std, sqrt
 from math import erf, log
 
+def write_to_file(scores, filename):
+    print "Writting combined scores data to " + filename 
+    file = open(filename, 'w')
+    for score in scores:
+        file.write(str(score) + "\n")
+    file.close()
+    print "Finished writting combined scores to " + filename
+
+
 # Perform score combination to get a final outlier score for each node
-def form_combined_scores(gfadd_scores_filename, abod_scores_filename, combined_scores_filename):
+def form_combined_scores(gfadd_scores_filename, abod_scores_filename, combined_scores_filename,
+                        combined_scores_filename_ABOD, combined_scores_filename_GFADD):
     start_time = time.time()
     print "Reading scores data from " + gfadd_scores_filename, abod_scores_filename
     # Weights for each plot from 1-8 respectively
@@ -19,6 +29,32 @@ def form_combined_scores(gfadd_scores_filename, abod_scores_filename, combined_s
 
     num_scores = len(gfadd_scores_data[0])
 
+    print("Combining ABOD scores...")
+    combined_scores_ABOD = []
+    for i in range(num_scores):
+        numerator = 0
+        denominator = 0
+        for plot_num in range(8):
+            numerator += (weights[plot_num] * abod_scores_data[plot_num][i])
+            denominator += weights[plot_num]
+
+        combined_scores_ABOD.append(numerator/denominator)
+    print "Done combining ABOD scores"
+    write_to_file(combined_scores_ABOD, combined_scores_filename_ABOD)
+
+    print("Combining GFADD scores...")
+    combined_scores_GFADD = []
+    for i in range(num_scores):
+        numerator = 0
+        denominator = 0
+        for plot_num in range(8):
+            numerator += (weights[plot_num] * gfadd_scores_data[plot_num][i])
+            denominator += weights[plot_num]
+
+        combined_scores_GFADD.append(numerator/denominator)
+    print "Done combining GFADD scores"
+    write_to_file(combined_scores_GFADD, combined_scores_filename_GFADD)
+
     print("Combining scores data ...")
     combined_scores = []
     for i in range(num_scores):
@@ -30,23 +66,26 @@ def form_combined_scores(gfadd_scores_filename, abod_scores_filename, combined_s
                 denominator += weights[plot_num]
 
         combined_scores.append(numerator/denominator)
-
     print "Done combining scores data"
+    write_to_file(combined_scores, combined_scores_filename)
 
-    print "Writting combined scores data to " + combined_scores_filename 
-    combined_scores_file = open(combined_scores_filename, 'w')
-    for score in combined_scores:
-        combined_scores_file.write(str(score) + "\n")
-    combined_scores_file.close()
-    print "Finished writting combined scores to " + combined_scores_filename
+    # print "Writting combined scores data to " + combined_scores_filename 
+    # combined_scores_file = open(combined_scores_filename, 'w')
+    # for score in combined_scores:
+    #     combined_scores_file.write(str(score) + "\n")
+    # combined_scores_file.close()
+    # print "Finished writting combined scores to " + combined_scores_filename
     print "Time to combine all scores and write them to a file was: " + str(time.time()-start_time) + " seconds"
 
 def main():
     gfadd_scores_filename = "GFADD_scores.csv"
     abod_scores_filename = "ABOD_scores.csv"
     combined_scores_filename = "combined_scores.csv"
+    combined_scores_filename_ABOD = "combined_scores_ABOD.csv"
+    combined_scores_filename_GFADD = "combined_scores_GFADD.csv"
 
-    form_combined_scores(gfadd_scores_filename, abod_scores_filename, combined_scores_filename)
+    form_combined_scores(gfadd_scores_filename, abod_scores_filename,
+     combined_scores_filename, combined_scores_filename_ABOD, combined_scores_filename_GFADD)
 
 if __name__ == '__main__':
     start_time = time.time()
